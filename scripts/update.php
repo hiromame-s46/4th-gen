@@ -54,6 +54,23 @@ $result = [
 ];
 
 try {
+    $typhoonList = fetchJson('https://www.jma.go.jp/bosai/information/data/typhoon.json');
+    writeJson($cacheDir . '/typhoon.json', [
+        'updatedAt' => gmdate('c'),
+        'items' => array_values(array_map(static function (array $item): array {
+            return [
+                'eventId' => $item['eventId'] ?? null,
+                'title' => $item['headTitle'] ?? $item['controlTitle'] ?? '台風情報',
+                'reportDatetime' => $item['reportDatetime'] ?? $item['targetDatetime'] ?? null,
+                'publishingOffice' => $item['publishingOffice'] ?? '気象庁',
+            ];
+        }, $typhoonList)),
+    ]);
+} catch (Throwable $error) {
+    $result['errors'][] = 'typhoon: ' . $error->getMessage();
+}
+
+try {
     writeJson(
         $cacheDir . '/warning.json',
         fetchJson('https://www.jma.go.jp/bosai/warning/data/warning/120000.json')

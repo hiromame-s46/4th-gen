@@ -1,3 +1,23 @@
+const EVENT_DATES = ['2026-06-02', '2026-06-03'];
+
+const WEATHER_CODES = {
+  100: '晴れ',
+  101: '晴れ時々くもり',
+  110: '晴れ時々くもり',
+  111: '晴れ時々くもり',
+  200: 'くもり',
+  201: 'くもり時々晴れ',
+  203: 'くもり時々雨',
+  204: 'くもり一時雨',
+  214: 'くもり後雨',
+  300: '雨',
+  301: '雨時々晴れ',
+  302: '雨時々止む',
+  306: '大雨',
+  308: '雨時々くもり',
+  400: '雪',
+};
+
 const WARNING_NAMES = {
   '02': '暴風雪警報',
   '03': '大雨警報',
@@ -35,7 +55,7 @@ const RAIL_SOURCES = [
 const ROUTES = [
   {
     title: '東京・新木場方面',
-    body: '基本は京葉線で南船橋へ。強風時は総武線と京成本線の迂回も確認。',
+    body: '京葉線で南船橋へ。強風時は総武線と京成本線も確認。',
     links: [['JR東日本', 'https://traininfo.jreast.co.jp/train_info/kanto.aspx']],
   },
   {
@@ -90,9 +110,9 @@ const EVACUATION_LINKS = [
 const SOURCES = [
   ['櫻坂46公式 公演情報', 'https://sakurazaka46.com/s/s46/news/detail/E00637?ima=0000&link=ROBO004'],
   ['LaLa arena TOKYO-BAY アクセス', 'https://lalaarenatokyo-bay.com/access/'],
+  ['気象庁 台風情報', 'https://www.jma.go.jp/bosai/map.html#contents=typhoon'],
   ['気象庁 会場周辺の警報・注意報', 'https://www.jma.go.jp/bosai/warning/#area_type=class20s&area_code=1220400&lang=ja'],
   ['気象庁 雨雲の動き', 'https://www.jma.go.jp/bosai/nowc/#zoom:10/lat:35.686/lon:139.991/colordepth:normal/elements:hrpns'],
-  ['気象庁 キキクル', 'https://www.jma.go.jp/bosai/risk/#zoom:10/lat:35.686/lon:139.991/colordepth:normal/elements:flood'],
   ['JR東日本 運行情報', 'https://traininfo.jreast.co.jp/train_info/kanto.aspx'],
   ['京成電鉄 運行情報', 'https://www.keisei.co.jp/'],
   ['羽田空港 遅延欠航', 'https://www.tokyo-haneda.com/flight/dms_cancel_delay.html'],
@@ -100,6 +120,7 @@ const SOURCES = [
 ];
 
 const state = {
+  typhoon: null,
   warning: null,
   forecast: null,
   transport: null,
@@ -109,6 +130,7 @@ const state = {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderStatic();
+  setupTabs();
   document.getElementById('refresh-button').addEventListener('click', () => refreshAll(true));
   refreshAll(false);
   setInterval(() => refreshAll(false), 5 * 60 * 1000);
@@ -146,6 +168,33 @@ function renderStatic() {
   `).join('');
 }
 
+function setupTabs() {
+  const panels = document.getElementById('tab-panels');
+  const buttons = [...document.querySelectorAll('.tab-nav button')];
+
+  buttons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const index = Number(button.dataset.tab);
+      panels.scrollTo({ left: panels.clientWidth * index, behavior: 'smooth' });
+      setActiveTab(index);
+    });
+  });
+
+  let frame = 0;
+  panels.addEventListener('scroll', () => {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(() => {
+      setActiveTab(Math.round(panels.scrollLeft / panels.clientWidth));
+    });
+  }, { passive: true });
+}
+
+function setActiveTab(index) {
+  document.querySelectorAll('.tab-nav button').forEach((button, buttonIndex) => {
+    button.classList.toggle('is-active', buttonIndex === index);
+  });
+}
+
 async function refreshAll(force) {
   if (state.loading) return;
   state.loading = true;
@@ -153,14 +202,17 @@ async function refreshAll(force) {
   setRefreshState(force ? '更新中' : '読込中');
 
   try {
-    const [warning, forecast, transport] = await Promise.all([
+    const [typhoon, warning, forecast, transport] = await Promise.all([
+      fetchJson(cacheUrl('cache/typhoon.json')).catch(() => ({ items: [] })),
       fetchJson(cacheUrl('cache/warning.json')),
       fetchJson(cacheUrl('cache/forecast.json')),
       fetchJson(cacheUrl('cache/transport.json')),
     ]);
+    state.typhoon = typhoon;
     state.warning = warning;
     state.forecast = forecast;
     state.transport = transport;
+    renderTyphoon();
     renderForecast();
     renderWarnings();
     renderTransport();
@@ -173,39 +225,78 @@ async function refreshAll(force) {
   }
 }
 
-function renderForecast() {
-  const days = getForecastDays();
-  const grid = document.getElementById('forecast-grid');
+function renderTyphoon() {
+  const item = state.typhoon?.items?.[0];
+  document.getElementById('typhoon-title').textContent = item?.title || '台風情報は公式発表を確認';
+  document.getElementById('typhoon-note').textContent = item
+    ? `${formatDateTime(item.reportDatetime)} 発表 / 位置よりも会場周辺の雨・風・交通を優先確認`
+    : '公演日周辺は天気・風・交通の変化を優先して確認してください。';
+}
 
-  if (!days.length) {
-    grid.innerHTML = '<p class="muted">予報を取得できませんでした。</p>';
-    setTile('summary-weather', '天気', '公式確認', '気象庁の会場周辺予報を確認してください。', 'watch');
-    setTile('summary-wind', '風', '公式確認', '風の予報を取得できませんでした。', 'watch');
+function renderForecast() {
+  const days = getEventDays();
+  const [day2, day3] = days;
+
+  if (!day2 && !day3) {
+    setTile('summary-day2', '6/2', '公式確認', '予報を取得できませんでした。', 'watch');
+    setTile('summary-day3', '6/3', '公式確認', '予報を取得できませんでした。', 'watch');
     return;
   }
 
-  const target = days.find((day) => day.date === '2026-06-02') || days[0];
-  setTile('summary-weather', '天気', target.weather || '確認中', `降水確率 ${target.pop || '--'} / ${formatShortDate(target.time)}`, riskFromWeather(target));
-  setTile('summary-wind', '風', windLabel(target.wind), target.wind || '風の予報を確認中です。', riskFromWind(target.wind));
+  renderDay('day2-panel', day2, '6/2 初日', 'day2');
+  renderDay('day3-panel', day3, '6/3 2日目', 'day3');
+  renderDecisionGrid(days);
 
-  grid.innerHTML = days.map((day) => `
-    <article class="forecast-card">
+  setTile('summary-day2', '6/2', day2?.weather || '確認中', `降水確率 ${day2?.pop || '--'} / ${windLabel(day2?.wind)}`, riskFromDay(day2));
+  setTile('summary-day3', '6/3', day3?.weather || '確認中', `降水確率 ${day3?.pop || '--'} / ${day3?.reliability ? `信頼度 ${day3.reliability}` : '風は公式確認'}`, riskFromDay(day3));
+}
+
+function renderDay(id, day, title, key) {
+  const container = document.getElementById(id);
+  if (!day) {
+    container.innerHTML = '<p class="muted">予報を取得できませんでした。</p>';
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="day-summary-card">
       <div class="weather-mark">${weatherIcon(day.weather)}</div>
       <div>
-        <time>${formatShortDate(day.time)}</time>
+        <p class="eyebrow">${formatShortDate(day.time)}</p>
+        <h3>${title}</h3>
         <strong>${day.weather || '--'}</strong>
-        <div class="forecast-metrics">
-          <span>${smallIcon('cloud-rain')}降水確率 ${day.pop || '--'}</span>
-          <span>${smallIcon('wind')}${day.wind || '風 --'}</span>
-          <span>${smallIcon('alert')}波 ${day.wave || '--'}</span>
-        </div>
       </div>
+    </div>
+    <div class="metric-grid">
+      ${metricCard('雨', day.pop || '--', 'cloud-rain')}
+      ${metricCard('風', windLabel(day.wind), 'wind', day.wind || '詳細は気象庁を確認')}
+      ${metricCard('波', day.wave || '--', 'alert')}
+      ${metricCard('判断', decisionText(day), 'alert')}
+    </div>
+    <div class="action-list">
+      ${linkButton('雨雲', 'https://www.jma.go.jp/bosai/nowc/#zoom:10/lat:35.686/lon:139.991/colordepth:normal/elements:hrpns')}
+      ${linkButton('今後の雨', 'https://www.jma.go.jp/bosai/kaikotan/#zoom:9/lat:35.686/lon:139.991/colordepth:normal/elements:rasrf')}
+      ${linkButton('警報', 'https://www.jma.go.jp/bosai/warning/#area_type=class20s&area_code=1220400&lang=ja')}
+    </div>
+  `;
+}
+
+function renderDecisionGrid(days) {
+  document.getElementById('top-decision-grid').innerHTML = days.map((day) => `
+    <article class="decision-card">
+      <span>${formatShortDate(day.time)}</span>
+      <strong>${decisionText(day)}</strong>
+      <p>${day.weather || '--'} / 降水確率 ${day.pop || '--'}</p>
     </article>
   `).join('');
 }
 
-function getForecastDays() {
-  if (!Array.isArray(state.forecast) || !state.forecast.length) return [];
+function getEventDays() {
+  return EVENT_DATES.map((date) => getForecastForDate(date));
+}
+
+function getForecastForDate(date) {
+  if (!Array.isArray(state.forecast) || !state.forecast.length) return null;
   const short = state.forecast[0];
   const shortWeather = short.timeSeries?.[0];
   const shortPops = short.timeSeries?.[1];
@@ -213,17 +304,36 @@ function getForecastDays() {
   const area = shortWeather?.areas?.find((item) => item.area?.code === '120010') || shortWeather?.areas?.[0];
   const popArea = shortPops?.areas?.find((item) => item.area?.code === '120010') || shortPops?.areas?.[0];
   const weeklyArea = weekly?.areas?.find((item) => item.area?.code === '120000') || weekly?.areas?.[0];
-  const shortPopByTime = new Map((shortPops?.timeDefines || []).map((time, index) => [time, popArea?.pops?.[index]]));
-  const weeklyPopByDate = new Map((weekly?.timeDefines || []).map((time, index) => [time.slice(0, 10), weeklyArea?.pops?.[index]]));
 
-  return (shortWeather?.timeDefines || []).map((time, index) => ({
-    time,
-    date: time.slice(0, 10),
-    weather: tidy(area?.weathers?.[index]),
-    wind: tidy(area?.winds?.[index]),
-    wave: tidy(area?.waves?.[index]),
-    pop: normalizePop(shortPopByTime.get(time) || weeklyPopByDate.get(time.slice(0, 10))),
-  })).slice(0, 3);
+  const shortIndex = (shortWeather?.timeDefines || []).findIndex((time) => time.startsWith(date));
+  const weeklyIndex = (weekly?.timeDefines || []).findIndex((time) => time.startsWith(date));
+
+  if (shortIndex >= 0) {
+    const popByTime = new Map((shortPops?.timeDefines || []).map((time, index) => [time, popArea?.pops?.[index]]));
+    return {
+      date,
+      time: shortWeather.timeDefines[shortIndex],
+      weather: tidy(area?.weathers?.[shortIndex]),
+      wind: tidy(area?.winds?.[shortIndex]),
+      wave: tidy(area?.waves?.[shortIndex]),
+      pop: normalizePop(popByTime.get(shortWeather.timeDefines[shortIndex]) || weeklyArea?.pops?.[weeklyIndex]),
+      reliability: weeklyArea?.reliabilities?.[weeklyIndex] || '',
+    };
+  }
+
+  if (weeklyIndex >= 0) {
+    return {
+      date,
+      time: weekly.timeDefines[weeklyIndex],
+      weather: WEATHER_CODES[Number(weeklyArea?.weatherCodes?.[weeklyIndex])] || '週間予報',
+      wind: '',
+      wave: '',
+      pop: normalizePop(weeklyArea?.pops?.[weeklyIndex]),
+      reliability: weeklyArea?.reliabilities?.[weeklyIndex] || '',
+    };
+  }
+
+  return null;
 }
 
 function renderWarnings() {
@@ -254,33 +364,40 @@ function renderWarnings() {
 
 function renderTransport() {
   const sources = state.transport?.sources?.length ? state.transport.sources : fallbackTransport();
-  const cards = document.getElementById('rail-cards');
   const hasIssue = sources.some((source) => source.state === 'danger' || source.state === 'watch');
+  const okCount = sources.filter((source) => source.state === 'ok').length;
 
   setTile(
     'summary-rail',
     '交通',
     hasIssue ? '要確認' : '平常',
-    hasIssue ? 'アクセス路線に注意情報があります。' : '主要アクセス路線は平常表示です。',
+    hasIssue ? 'アクセス路線に注意情報があります。' : `${okCount}/${sources.length} 系統が平常表示です。`,
     hasIssue ? 'watch' : 'ok',
   );
 
-  cards.innerHTML = sources.map((source) => `
-    <article class="transport-card">
-      <div class="transport-card__top">
+  document.getElementById('transport-overview').innerHTML = `
+    <article class="transport-summary ${hasIssue ? 'is-watch' : 'is-ok'}">
+      <strong>${hasIssue ? '交通は公式ページで再確認' : '会場アクセス路線は平常表示'}</strong>
+      <span>京葉線・武蔵野線・京成本線・空港アクセスを優先確認</span>
+    </article>
+  `;
+
+  document.getElementById('rail-cards').innerHTML = sources.map((source) => `
+    <article class="transport-row">
+      <div class="transport-row__state state-${stateClass(source.state)}">${source.label || '公式確認'}</div>
+      <div class="transport-row__main">
         <h3>${source.name}</h3>
-        <span class="transport-state state-${stateClass(source.state)}">${source.label || '公式確認'}</span>
+        <div class="transport-lines">${(source.lines || []).map((line) => `<span>${line}</span>`).join('')}</div>
+        <p>${source.text || '公式ページで最新情報を確認してください。'}</p>
       </div>
-      <div class="transport-lines">${(source.lines || []).map((line) => `<span>${line}</span>`).join('')}</div>
-      <p>${source.text || '公式ページで最新情報を確認してください。'}</p>
-      <div class="card-links">${linkButton('公式情報', source.url)}</div>
+      ${linkButton('確認', source.url)}
     </article>
   `).join('');
 }
 
 function renderFallback() {
-  setTile('summary-weather', '天気', '取得エラー', 'キャッシュを更新してください。', 'watch');
-  setTile('summary-wind', '風', '取得エラー', 'キャッシュを更新してください。', 'watch');
+  setTile('summary-day2', '6/2', '取得エラー', 'キャッシュを更新してください。', 'watch');
+  setTile('summary-day3', '6/3', '取得エラー', 'キャッシュを更新してください。', 'watch');
   setTile('summary-alert', '警報', '取得エラー', '公式情報を確認してください。', 'watch');
   renderTransport();
 }
@@ -312,6 +429,17 @@ function setTile(id, label, title, body, stateName) {
   element.innerHTML = `${icon}<span>${label}</span><strong>${title}</strong><p>${body}</p>`;
 }
 
+function metricCard(label, value, icon, note = '') {
+  return `
+    <article class="metric-card">
+      ${smallIcon(icon)}
+      <span>${label}</span>
+      <strong>${value}</strong>
+      ${note ? `<p>${note}</p>` : ''}
+    </article>
+  `;
+}
+
 async function fetchJson(url) {
   const response = await fetch(url, { cache: 'no-store' });
   if (!response.ok) throw new Error(`${response.status} ${url}`);
@@ -323,9 +451,9 @@ function cacheUrl(path) {
 }
 
 function weatherIcon(weather = '') {
-  if (weather.includes('雨')) return smallIcon('cloud-rain', 'large');
-  if (weather.includes('風')) return smallIcon('wind', 'large');
-  return smallIcon('cloud-rain', 'large');
+  if (weather.includes('雨')) return smallIcon('cloud-rain');
+  if (weather.includes('風')) return smallIcon('wind');
+  return smallIcon('cloud-rain');
 }
 
 function smallIcon(name) {
@@ -342,21 +470,26 @@ function normalizePop(value) {
 }
 
 function windLabel(wind = '') {
-  if (!wind) return '確認中';
+  if (!wind) return '公式確認';
   if (wind.includes('非常に強く') || wind.includes('強く')) return '強風注意';
   if (wind.includes('やや強く')) return 'やや強い';
   return '通常';
 }
 
-function riskFromWeather(day) {
+function decisionText(day) {
+  if (!day) return '公式確認';
   const pop = Number(String(day.pop || '').replace('%', ''));
-  if ((day.weather || '').includes('雨') || pop >= 60) return 'watch';
-  return 'ok';
+  if ((day.weather || '').includes('雨') && pop >= 60) return '雨具必須';
+  if ((day.weather || '').includes('雨')) return '雨具推奨';
+  if (windLabel(day.wind).includes('強')) return '風に注意';
+  return '通常確認';
 }
 
-function riskFromWind(wind = '') {
-  if (wind.includes('非常に強く') || wind.includes('強く')) return 'danger';
-  if (wind.includes('やや強く')) return 'watch';
+function riskFromDay(day) {
+  if (!day) return 'watch';
+  const pop = Number(String(day.pop || '').replace('%', ''));
+  if (pop >= 80 || windLabel(day.wind) === '強風注意') return 'danger';
+  if ((day.weather || '').includes('雨') || pop >= 60 || windLabel(day.wind) === 'やや強い') return 'watch';
   return 'ok';
 }
 
@@ -378,6 +511,18 @@ function formatShortDate(value) {
     month: 'numeric',
     day: 'numeric',
     weekday: 'short',
+  }).format(date);
+}
+
+function formatDateTime(value) {
+  if (!value) return '--';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('ja-JP', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   }).format(date);
 }
 
