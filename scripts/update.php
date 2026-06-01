@@ -55,16 +55,16 @@ $result = [
 
 try {
     $typhoonList = fetchJson('https://www.jma.go.jp/bosai/information/data/typhoon.json');
+    $items = [];
+    foreach ($typhoonList as $item) {
+        $eventId = $item['eventId'] ?? null;
+        $specs = $eventId ? fetchJson("https://www.jma.go.jp/bosai/typhoon/data/{$eventId}/specifications.json") : [];
+        $items[] = buildTyphoonSummary($item, $specs);
+    }
+
     writeJson($cacheDir . '/typhoon.json', [
         'updatedAt' => gmdate('c'),
-        'items' => array_values(array_map(static function (array $item): array {
-            return [
-                'eventId' => $item['eventId'] ?? null,
-                'title' => $item['headTitle'] ?? $item['controlTitle'] ?? '台風情報',
-                'reportDatetime' => $item['reportDatetime'] ?? $item['targetDatetime'] ?? null,
-                'publishingOffice' => $item['publishingOffice'] ?? '気象庁',
-            ];
-        }, $typhoonList)),
+        'items' => $items,
     ]);
 } catch (Throwable $error) {
     $result['errors'][] = 'typhoon: ' . $error->getMessage();
@@ -132,6 +132,80 @@ function loadTransportSource(array $source): array
             'updatedAt' => null,
         ];
     }
+}
+
+function buildTyphoonSummary(array $info, array $specs): array
+{
+    $title = null;
+    $analysis = null;
+    $forecasts = [];
+
+    foreach ($specs as $part) {
+        if (($part['part'] ?? null) === 'title') {
+            $title = $part;
+            continue;
+        }
+
+        if (($part['advancedHours'] ?? null) === 0) {
+            $analysis = $part;
+        }
+
+        if (($part['validtime']['JST'] ?? null) !== null) {
+            $forecasts[] = compactTyphoonPart($part);
+        }
+    }
+
+    return [
+        'eventId' => $info['eventId'] ?? null,
+        'title' => $info['headTitle'] ?? $info['controlTitle'] ?? '台風情報',
+        'name' => $title['name']['jp'] ?? null,
+        'category' => $title['category']['jp'] ?? $analysis['category']['jp'] ?? null,
+        'issue' => $title['issue']['JST'] ?? $info['reportDatetime'] ?? null,
+        'reportDatetime' => $info['reportDatetime'] ?? $info['targetDatetime'] ?? null,
+        'publishingOffice' => $info['publishingOffice'] ?? '気象庁',
+        'analysis' => compactTyphoonPart($analysis ?? []),
+        'eventForecasts' => [
+            '2026-06-02' => nearestTyphoonForecast($forecasts, '2026-06-02T19:00:00+09:00'),
+            '2026-06-03' => nearestTyphoonForecast($forecasts, '2026-06-03T19:00:00+09:00'),
+        ],
+    ];
+}
+
+function compactTyphoonPart(array $part): array
+{
+    return [
+        'label' => is_array($part['part'] ?? null) ? ($part['part']['jp'] ?? null) : ($part['part'] ?? null),
+        'validtime' => $part['validtime']['JST'] ?? null,
+        'location' => $part['location'] ?? null,
+        'category' => $part['category']['jp'] ?? null,
+        'intensity' => ($part['intensity'] ?? '-') !== '-' ? ($part['intensity'] ?? null) : null,
+        'course' => $part['course'] ?? null,
+        'speed' => $part['speed']['km/h'] ?? null,
+        'pressure' => $part['pressure'] ?? null,
+        'wind' => $part['maximumWind']['sustained']['m/s'] ?? null,
+        'gust' => $part['maximumWind']['gust']['m/s'] ?? null,
+    ];
+}
+
+function nearestTyphoonForecast(array $forecasts, string $target): ?array
+{
+    $targetTime = strtotime($target);
+    $nearest = null;
+    $nearestDelta = PHP_INT_MAX;
+
+    foreach ($forecasts as $forecast) {
+        $time = strtotime($forecast['validtime'] ?? '');
+        if ($time === false) {
+            continue;
+        }
+        $delta = abs($time - $targetTime);
+        if ($delta < $nearestDelta) {
+            $nearest = $forecast;
+            $nearestDelta = $delta;
+        }
+    }
+
+    return $nearest;
 }
 
 function extractTransportText(string $text, array $source): array

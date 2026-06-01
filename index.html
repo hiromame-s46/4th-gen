@@ -6,7 +6,7 @@
     <title>櫻坂46 四期生LIVE 天気・交通ボード</title>
     <meta
       name="description"
-      content="LaLa arena TOKYO-BAYで開催される櫻坂46 四期生LIVE来場者向けの、会場周辺の台風・天気・風・雨・交通情報ダッシュボード。"
+      content="LaLa arena TOKYO-BAYで開催される櫻坂46 四期生LIVE来場者向けの、台風・会場周辺天気・交通情報。"
     >
     <link rel="preload" as="image" href="assets/weather-bay.png">
     <link rel="preload" as="image" href="assets/day2-rain.png">
@@ -50,159 +50,94 @@
         <path d="M20 12a8 8 0 1 1-2.3-5.7"></path>
         <path d="M20 4v6h-6"></path>
       </symbol>
-      <symbol id="icon-calendar" viewBox="0 0 24 24">
-        <path d="M7 2v4M17 2v4M3 10h18"></path>
-        <path d="M5 5h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"></path>
-      </symbol>
     </svg>
 
-    <header class="app-header">
-      <div class="hero-image" aria-hidden="true"></div>
-      <div class="app-header__content">
+    <header class="top-shell">
+      <div>
         <p class="eyebrow">LaLa arena TOKYO-BAY</p>
-        <h1>四期生LIVE 天気・交通ボード</h1>
-        <p class="lead">台風、会場周辺の天気、雨、風、交通をスワイプで確認。</p>
-        <div class="event-card" aria-label="公演情報">
-          <span>6/2(火)</span>
-          <span>6/3(水)</span>
-          <span>開場17:30 / 開演19:00</span>
-        </div>
+        <h1>四期生LIVE 天気・交通</h1>
       </div>
+      <button class="refresh-button" id="refresh-button" type="button" aria-label="更新">
+        <svg><use href="#icon-refresh"></use></svg>
+      </button>
     </header>
 
-    <main>
-      <section class="typhoon-hero" aria-label="台風情報">
-        <div class="typhoon-hero__icon">
-          <svg><use href="#icon-alert"></use></svg>
-        </div>
-        <div>
+    <section class="hero-deck" id="hero-deck" aria-label="スワイプで切り替える主要情報">
+      <article class="hero-slide hero-slide--typhoon">
+        <div class="slide-content">
           <p class="eyebrow">Typhoon</p>
-          <h2 id="typhoon-title">台風情報を確認中</h2>
-          <p id="typhoon-note">公演日周辺は天気・風・交通の変化を優先して確認してください。</p>
+          <h2 id="hero-typhoon-title">台風情報を確認中</h2>
+          <p id="hero-typhoon-note">気象庁データを読み込み中です。</p>
+          <div class="hero-metrics" id="hero-typhoon-metrics"></div>
         </div>
-        <a class="icon-link" href="https://www.jma.go.jp/bosai/map.html#contents=typhoon" target="_blank" rel="noreferrer">
-          <svg><use href="#icon-link"></use></svg>
-          気象庁
-        </a>
-      </section>
+      </article>
 
-      <section class="quick-status" aria-label="現在の要点">
-        <article class="status-tile" id="summary-day2">
-          <svg><use href="#icon-calendar"></use></svg>
-          <span>6/2</span>
-          <strong>読込中</strong>
-          <p>初日の天気を確認しています。</p>
-        </article>
-        <article class="status-tile" id="summary-day3">
-          <svg><use href="#icon-calendar"></use></svg>
-          <span>6/3</span>
-          <strong>読込中</strong>
-          <p>2日目の天気を確認しています。</p>
-        </article>
-        <article class="status-tile" id="summary-alert">
-          <svg><use href="#icon-alert"></use></svg>
-          <span>警報</span>
-          <strong>読込中</strong>
-          <p>会場周辺の警報・注意報を確認しています。</p>
-        </article>
-        <article class="status-tile" id="summary-rail">
-          <svg><use href="#icon-train"></use></svg>
-          <span>交通</span>
-          <strong>読込中</strong>
-          <p>鉄道と空港アクセスを確認しています。</p>
-        </article>
-      </section>
+      <article class="hero-slide hero-slide--day2">
+        <div class="slide-content">
+          <p class="eyebrow">June 2</p>
+          <h2>6/2 初日</h2>
+          <p id="hero-day2-lead">天気を読み込み中です。</p>
+          <div class="hero-metrics" id="hero-day2-metrics"></div>
+        </div>
+      </article>
 
-      <section class="toolbar" aria-label="更新と主要リンク">
-        <button class="refresh-button" id="refresh-button" type="button">
-          <svg><use href="#icon-refresh"></use></svg>
-          <span>更新</span>
-        </button>
+      <article class="hero-slide hero-slide--day3">
+        <div class="slide-content">
+          <p class="eyebrow">June 3</p>
+          <h2>6/3 2日目</h2>
+          <p id="hero-day3-lead">天気を読み込み中です。</p>
+          <div class="hero-metrics" id="hero-day3-metrics"></div>
+        </div>
+      </article>
+
+      <article class="hero-slide hero-slide--transport">
+        <div class="slide-content">
+          <p class="eyebrow">Transport</p>
+          <h2 id="hero-transport-title">交通を確認中</h2>
+          <p id="hero-transport-note">京葉線・京成本線・空港アクセスを確認しています。</p>
+          <div class="hero-metrics" id="hero-transport-metrics"></div>
+        </div>
+      </article>
+    </section>
+
+    <nav class="hero-tabs" aria-label="ヒーロー切替">
+      <button class="is-active" type="button" data-hero="0">台風</button>
+      <button type="button" data-hero="1">6/2</button>
+      <button type="button" data-hero="2">6/3</button>
+      <button type="button" data-hero="3">交通</button>
+    </nav>
+
+    <main>
+      <div class="update-row">
         <span id="refresh-state">更新待機中</span>
         <a href="https://lalaarenatokyo-bay.com/access/" target="_blank" rel="noreferrer">会場アクセス</a>
+      </div>
+
+      <section class="section">
+        <div class="section-head">
+          <h2>公演日の判断</h2>
+          <p>雨具、風、交通を日別に確認。</p>
+        </div>
+        <div class="day-grid">
+          <article class="day-card" id="day2-card"></article>
+          <article class="day-card" id="day3-card"></article>
+        </div>
       </section>
 
-      <nav class="tab-nav" aria-label="情報タブ">
-        <button class="is-active" type="button" data-tab="0">台風</button>
-        <button type="button" data-tab="1">6/2</button>
-        <button type="button" data-tab="2">6/3</button>
-        <button type="button" data-tab="3">交通</button>
-        <button type="button" data-tab="4">空港</button>
-        <button type="button" data-tab="5">安全</button>
-      </nav>
+      <section class="section">
+        <div class="section-head">
+          <h2>交通一覧</h2>
+          <p>会場アクセスと空港接続をまとめて確認。</p>
+        </div>
+        <div id="transport-list" class="transport-list"></div>
+      </section>
 
-      <section class="tab-panels" id="tab-panels" aria-label="スワイプ可能な情報パネル">
-        <article class="tab-panel">
-          <div class="visual-panel visual-panel--typhoon">
-            <div>
-              <p class="eyebrow">Typhoon & Weather</p>
-              <h2>まず見る情報</h2>
-              <p>進路図よりも、会場周辺の雨・風・交通の変化を優先して判断。</p>
-            </div>
-          </div>
-          <div class="decision-grid" id="top-decision-grid"></div>
-          <div id="warning-list" class="alert-list">
-            <p class="muted">警報・注意報を読み込み中です。</p>
-          </div>
-        </article>
-
-        <article class="tab-panel">
-          <div class="visual-panel visual-panel--day2">
-            <div>
-              <p class="eyebrow">June 2</p>
-              <h2>6/2 初日</h2>
-              <p>開演前後の雨と風を確認。</p>
-            </div>
-          </div>
-          <div id="day2-panel" class="day-panel-content"></div>
-        </article>
-
-        <article class="tab-panel">
-          <div class="visual-panel visual-panel--day3">
-            <div>
-              <p class="eyebrow">June 3</p>
-              <h2>6/3 2日目</h2>
-              <p>帰路と遠征便の乱れも確認。</p>
-            </div>
-          </div>
-          <div id="day3-panel" class="day-panel-content"></div>
-        </article>
-
-        <article class="tab-panel">
-          <div class="visual-panel visual-panel--transport">
-            <div>
-              <p class="eyebrow">Transport</p>
-              <h2>交通</h2>
-              <p>会場アクセス路線と空港接続を一覧で確認。</p>
-            </div>
-          </div>
-          <div id="transport-overview" class="transport-overview"></div>
-          <div id="rail-cards" class="transport-list"></div>
-          <div class="route-list" id="route-panels"></div>
-        </article>
-
-        <article class="tab-panel">
-          <div class="section-heading">
-            <svg><use href="#icon-plane"></use></svg>
-            <div>
-              <p class="eyebrow">Flight</p>
-              <h2>飛行機</h2>
-            </div>
-          </div>
-          <div class="link-card-list" id="flight-grid"></div>
-        </article>
-
-        <article class="tab-panel">
-          <div class="section-heading">
-            <svg><use href="#icon-home"></use></svg>
-            <div>
-              <p class="eyebrow">Safety</p>
-              <h2>避難・安全確認</h2>
-            </div>
-          </div>
-          <div class="link-card-list" id="evacuation-summary"></div>
-          <div class="source-list" id="source-list"></div>
-        </article>
+      <section class="section">
+        <div class="section-head">
+          <h2>公式リンク</h2>
+          <p>迷ったら公式情報を優先。</p>
+        </div>
+        <div id="official-links" class="link-grid"></div>
       </section>
     </main>
   </body>
