@@ -1,18 +1,18 @@
 {
-    "updatedAt": "2026-06-01T01:23:45+00:00",
+    "updatedAt": "2026-06-01T03:29:08+00:00",
     "items": [
         {
             "eventId": "TC2606",
             "title": "令和８年　台風第６号に関する情報",
             "name": "チャンミー",
             "category": "台風",
-            "issue": "2026-06-01T09:45:00+09:00",
+            "issue": "2026-06-01T11:45:00+09:00",
             "reportDatetime": "2026-05-27T10:30:00+09:00",
             "publishingOffice": "気象庁",
             "analysis": {
                 "label": "実況",
-                "validtime": "2026-06-01T09:00:00+09:00",
-                "location": "那覇市の南約210km",
+                "validtime": "2026-06-01T11:00:00+09:00",
+                "location": "那覇市の南南西約190km",
                 "category": "台風",
                 "intensity": null,
                 "course": "北",
@@ -23,7 +23,7 @@
             },
             "eventForecasts": {
                 "2026-06-02": {
-                    "label": "予報　２４時間後",
+                    "label": "予報　２２時間後",
                     "validtime": "2026-06-02T09:00:00+09:00",
                     "location": "奄美市の北約80km",
                     "category": "台風",
@@ -35,7 +35,7 @@
                     "gust": "45"
                 },
                 "2026-06-03": {
-                    "label": "予報　４８時間後",
+                    "label": "予報　４６時間後",
                     "validtime": "2026-06-03T09:00:00+09:00",
                     "location": "浜松市の南約70km",
                     "category": "台風",

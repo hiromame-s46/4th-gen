@@ -30,6 +30,7 @@ const FALLBACK_TRANSPORT = [
 
 const state = {
   typhoon: null,
+  satellite: null,
   forecast: null,
   transport: null,
   cacheBuster: '',
@@ -78,13 +79,15 @@ async function refreshAll(force) {
   setRefreshState(force ? '更新中' : '読込中');
 
   try {
-    const [typhoon, forecast, transport] = await Promise.all([
+    const [typhoon, satellite, forecast, transport] = await Promise.all([
       fetchJson(cacheUrl('cache/typhoon.json')).catch(() => ({ items: [] })),
+      fetchJson(cacheUrl('cache/satellite.json')).catch(() => null),
       fetchJson(cacheUrl('cache/forecast.json')),
       fetchJson(cacheUrl('cache/transport.json')),
     ]);
 
     state.typhoon = typhoon;
+    state.satellite = satellite;
     state.forecast = forecast;
     state.transport = transport;
     renderTyphoon();
@@ -116,6 +119,19 @@ function renderTyphoon() {
     heroMetric('最大瞬間', analysis.gust ? `${analysis.gust}m/s` : '--'),
     heroMetric('6/3付近', day3?.location || day2?.location || '--'),
   ].join('');
+
+  const satellite = state.satellite;
+  const infrared = satellite?.images?.infrared || Object.values(satellite?.images || {})[0];
+  const waterVapor = satellite?.images?.waterVapor;
+  if (infrared?.path) {
+    document.getElementById('satellite-image').src = `${infrared.path}${state.cacheBuster}`;
+  }
+  if (waterVapor?.path) {
+    document.getElementById('satellite-water-image').src = `${waterVapor.path}${state.cacheBuster}`;
+  }
+  document.getElementById('satellite-caption').textContent = satellite
+    ? `${satellite.source} / ${satellite.label}`
+    : '気象庁 衛星画像';
 }
 
 function renderWeather() {

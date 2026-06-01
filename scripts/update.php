@@ -71,6 +71,12 @@ try {
 }
 
 try {
+    writeJson($cacheDir . '/satellite.json', updateSatelliteCache($cacheDir));
+} catch (Throwable $error) {
+    $result['errors'][] = 'satellite: ' . $error->getMessage();
+}
+
+try {
     writeJson(
         $cacheDir . '/warning.json',
         fetchJson('https://www.jma.go.jp/bosai/warning/data/warning/120000.json')
@@ -208,6 +214,59 @@ function nearestTyphoonForecast(array $forecasts, string $target): ?array
     return $nearest;
 }
 
+function updateSatelliteCache(string $cacheDir): array
+{
+    $page = fetchText('https://www.data.jma.go.jp/mscweb/data/himawari/sat_img.php');
+    if (!preg_match('/<select name="slt_time"[^>]*>\s*<option value=([0-9]{4})>([^<]+)<\/option>/u', $page, $matches)) {
+        throw new RuntimeException('Satellite time option not found');
+    }
+
+    $timeCode = $matches[1];
+    $label = trim($matches[2]);
+    $images = [
+        'infrared' => [
+            'label' => '赤外',
+            'url' => "https://www.data.jma.go.jp/mscweb/data/himawari/img/jpn/jpn_b13_{$timeCode}.jpg",
+            'path' => $cacheDir . '/satellite-jpn-b13.jpg',
+            'publicPath' => 'cache/satellite-jpn-b13.jpg',
+        ],
+        'waterVapor' => [
+            'label' => '水蒸気',
+            'url' => "https://www.data.jma.go.jp/mscweb/data/himawari/img/jpn/jpn_b08_{$timeCode}.jpg",
+            'path' => $cacheDir . '/satellite-jpn-b08.jpg',
+            'publicPath' => 'cache/satellite-jpn-b08.jpg',
+        ],
+    ];
+
+    foreach ($images as $image) {
+        writeBinary($image['path'], fetchText($image['url']));
+    }
+
+    return [
+        'updatedAt' => gmdate('c'),
+        'timeCode' => $timeCode,
+        'label' => formatSatelliteLabel($label),
+        'source' => '気象庁 衛星画像（ひまわり）',
+        'images' => array_map(static fn (array $image): array => [
+            'label' => $image['label'],
+            'path' => $image['publicPath'],
+            'url' => $image['url'],
+        ], $images),
+    ];
+}
+
+function formatSatelliteLabel(string $label): string
+{
+    $date = DateTimeImmutable::createFromFormat('H:i T d F Y', $label, new DateTimeZone('UTC'));
+    if (!$date) {
+        return $label;
+    }
+
+    return $date
+        ->setTimezone(new DateTimeZone('Asia/Tokyo'))
+        ->format('Y/m/d H:i') . ' JST';
+}
+
 function extractTransportText(string $text, array $source): array
 {
     $cleaned = str_replace(
@@ -334,6 +393,18 @@ function writeJson(string $path, mixed $data): void
 
     $tmpPath = $path . '.tmp';
     if (file_put_contents($tmpPath, $encoded . PHP_EOL, LOCK_EX) === false) {
+        throw new RuntimeException('Write failed: ' . $tmpPath);
+    }
+    if (!rename($tmpPath, $path)) {
+        @unlink($tmpPath);
+        throw new RuntimeException('Rename failed: ' . $path);
+    }
+}
+
+function writeBinary(string $path, string $data): void
+{
+    $tmpPath = $path . '.tmp';
+    if (file_put_contents($tmpPath, $data, LOCK_EX) === false) {
         throw new RuntimeException('Write failed: ' . $tmpPath);
     }
     if (!rename($tmpPath, $path)) {

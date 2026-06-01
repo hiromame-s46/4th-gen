@@ -1,0 +1,18 @@
+{
+    "updatedAt": "2026-06-01T03:29:09+00:00",
+    "timeCode": "0300",
+    "label": "2026/06/01 12:10 JST",
+    "source": "気象庁 衛星画像（ひまわり）",
+    "images": {
+        "infrared": {
+            "label": "赤外",
+            "path": "cache/satellite-jpn-b13.jpg",
+            "url": "https://www.data.jma.go.jp/mscweb/data/himawari/img/jpn/jpn_b13_0300.jpg"
+        },
+        "waterVapor": {
+            "label": "水蒸気",
+            "path": "cache/satellite-jpn-b08.jpg",
+            "url": "https://www.data.jma.go.jp/mscweb/data/himawari/img/jpn/jpn_b08_0300.jpg"
+        }
+    }
+}

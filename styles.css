@@ -100,7 +100,7 @@ h1 {
 
 .hero-slide {
   flex: 0 0 calc(100% - 28px);
-  min-height: 540px;
+  min-height: 620px;
   margin: 0 14px;
   padding: 18px;
   display: grid;
@@ -192,6 +192,36 @@ h1 {
 .hero-metric strong {
   font-size: 18px;
   line-height: 1.2;
+}
+
+.satellite-card {
+  margin: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+}
+
+.satellite-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.satellite-grid img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.satellite-card figcaption {
+  padding: 8px 10px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .hero-tabs {
