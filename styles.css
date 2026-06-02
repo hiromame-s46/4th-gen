@@ -10,7 +10,7 @@
   --accent-soft: #e7ecff;
   --green: #1c8b57;
   --pink: #d63b7b;
-  --shadow: 0 14px 34px rgba(22, 24, 29, 0.08);
+  --shadow: 0 10px 28px rgba(22, 24, 29, 0.07);
 }
 
 * {
@@ -19,6 +19,7 @@
 
 html {
   background: var(--bg);
+  scroll-behavior: smooth;
 }
 
 body {
@@ -29,6 +30,7 @@ body {
     linear-gradient(180deg, #ffffff 0, var(--bg) 28rem);
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 a {
@@ -43,7 +45,7 @@ button {
 .hero {
   max-width: 960px;
   margin: 0 auto;
-  padding: 28px 18px 20px;
+  padding: 24px 18px 16px;
 }
 
 .hero__label,
@@ -57,9 +59,9 @@ button {
 }
 
 .hero h1 {
-  margin: 10px 0 12px;
-  font-size: clamp(34px, 9vw, 64px);
-  line-height: 1.02;
+  margin: 9px 0 12px;
+  font-size: clamp(32px, 8.4vw, 60px);
+  line-height: 1.04;
   letter-spacing: 0;
 }
 
@@ -75,8 +77,8 @@ button {
 .quick-actions {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 10px;
-  margin-top: 22px;
+  gap: 8px;
+  margin-top: 18px;
 }
 
 .quick-actions a {
@@ -87,7 +89,16 @@ button {
   border-radius: 8px;
   background: var(--text);
   color: #ffffff;
+  font-size: 15px;
   font-weight: 850;
+  transition: transform 160ms ease, background 160ms ease, border-color 160ms ease;
+}
+
+.quick-actions a:active,
+.link-card:active,
+.map-card:active,
+.route-links a:active {
+  transform: scale(0.985);
 }
 
 .quick-actions a:nth-child(2) {
@@ -109,7 +120,7 @@ main {
 .notice {
   display: grid;
   gap: 6px;
-  margin: 4px 0 18px;
+  margin: 2px 0 14px;
   padding: 14px 16px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -131,10 +142,15 @@ main {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  margin: 0 -14px 20px;
-  padding: 10px 14px;
+  margin: 0 -14px 18px;
+  padding: 10px 14px 12px;
   background: rgba(245, 246, 248, 0.88);
   backdrop-filter: blur(16px);
+  scrollbar-width: none;
+}
+
+.category-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .category-tabs button {
@@ -146,6 +162,7 @@ main {
   background: var(--surface);
   color: var(--muted);
   font-weight: 800;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
 }
 
 .category-tabs button.is-active {
@@ -155,7 +172,7 @@ main {
 }
 
 .link-section {
-  margin: 0 0 30px;
+  margin: 0 0 28px;
 }
 
 .section-title {
@@ -182,6 +199,14 @@ main {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.link-card:hover,
+.route-card:hover,
+.map-card:hover {
+  border-color: rgba(53, 92, 222, 0.2);
+  box-shadow: 0 14px 34px rgba(22, 24, 29, 0.1);
 }
 
 .link-card {
@@ -228,12 +253,20 @@ main {
 }
 
 .route-card {
-  padding: 14px;
+  padding: 16px;
 }
 
 .route-card h3 {
-  margin: 8px 0 0;
-  font-size: 20px;
+  margin: 10px 0 0;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.route-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
 }
 
 .line-badge {
@@ -243,6 +276,18 @@ main {
   padding: 0 9px;
   border-radius: 999px;
   color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.station-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--text);
   font-size: 12px;
   font-weight: 900;
 }
@@ -258,20 +303,25 @@ main {
 .route-links {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 8px;
-  margin-top: 13px;
+  gap: 7px;
+  margin-top: 14px;
 }
 
 .route-links a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 42px;
-  padding: 0 12px;
+  min-height: 44px;
+  padding: 0 13px;
   border-radius: 8px;
   background: var(--surface-soft);
   font-size: 14px;
   font-weight: 850;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.route-links a:hover {
+  background: var(--accent-soft);
 }
 
 .route-links a::after,
@@ -344,6 +394,15 @@ footer {
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: 16px;
     align-items: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
