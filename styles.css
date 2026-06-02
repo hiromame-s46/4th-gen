@@ -20,6 +20,7 @@
 html {
   background: var(--bg);
   scroll-behavior: smooth;
+  scroll-padding-top: 74px;
 }
 
 body {
@@ -44,6 +45,8 @@ button {
   max-width: 960px;
   margin: 0 auto;
   padding: 22px 18px 14px;
+  scroll-snap-align: start;
+  scroll-margin-top: 0;
 }
 
 .hero__label,
@@ -140,6 +143,8 @@ main {
   background: rgba(245, 246, 248, 0.88);
   backdrop-filter: blur(16px);
   scrollbar-width: none;
+  scroll-snap-align: start;
+  scroll-margin-top: 0;
 }
 
 .category-tabs::-webkit-scrollbar {
@@ -166,6 +171,9 @@ main {
 
 .link-section {
   margin: 0 0 26px;
+  scroll-margin-top: 74px;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .section-title {
@@ -406,11 +414,22 @@ footer {
   }
 }
 
+@media (max-width: 760px) {
+  html {
+    scroll-snap-type: y mandatory;
+  }
+
+  main {
+    scroll-snap-type: y mandatory;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
     transition-duration: 0.01ms !important;
   }
 }
