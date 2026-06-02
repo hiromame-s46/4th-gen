@@ -95,6 +95,7 @@ button {
 .quick-actions a:active,
 .link-card:active,
 .map-card:active,
+.category-tabs button:active,
 .route-links a:active {
   transform: scale(0.985);
 }
@@ -203,12 +204,11 @@ main {
 
 .link-card {
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 24px;
-  grid-template-rows: auto auto;
+  grid-template-columns: 48px minmax(0, 1fr) 22px;
   align-items: center;
   column-gap: 12px;
-  row-gap: 4px;
   padding: 15px;
+  min-height: 86px;
 }
 
 .link-card.is-primary {
@@ -226,38 +226,46 @@ main {
   color: var(--accent);
   font-size: 13px;
   font-weight: 900;
-  grid-row: 1 / span 2;
 }
 
-.link-card strong,
+.link-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.link-copy strong,
 .map-card strong {
-  align-self: end;
   display: block;
   min-width: 0;
   font-size: 16px;
   line-height: 1.35;
 }
 
-.link-card strong {
-  grid-column: 2;
-  grid-row: 1;
-}
-
-.link-card small,
+.link-copy small,
 .map-card small,
 .route-card p {
   display: block;
-  margin-top: 5px;
   color: var(--muted);
   font-size: 13px;
   line-height: 1.45;
   font-weight: 650;
 }
 
-.link-card small {
-  grid-column: 2;
-  grid-row: 2;
-  margin-top: 0;
+.arrow {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.map-card small,
+.route-card p {
+  margin-top: 5px;
 }
 
 .route-card {
@@ -333,19 +341,10 @@ main {
 }
 
 .route-links a::after,
-.link-card::after,
 .map-card::after {
   content: "↗";
   color: var(--accent);
   font-weight: 900;
-}
-
-.link-card::after {
-  grid-column: 3;
-  grid-row: 1 / span 2;
-  align-self: center;
-  justify-self: center;
-  margin-top: 0;
 }
 
 .map-grid {
