@@ -109,7 +109,7 @@ button {
 main {
   max-width: 960px;
   margin: 0 auto;
-  padding: 0 14px 30px;
+  padding: 0 14px max(44px, calc(env(safe-area-inset-bottom) + 32px));
 }
 
 .notice {
@@ -168,8 +168,16 @@ main {
 }
 
 .link-section {
-  margin: 0 0 26px;
+  margin: 0 0 18px;
+  padding: 0 0 30px;
+  border-bottom: 1px solid rgba(105, 112, 125, 0.16);
   scroll-margin-top: 74px;
+}
+
+.link-section:last-of-type {
+  margin-bottom: 0;
+  padding-bottom: 46px;
+  border-bottom: 0;
 }
 
 .section-title {
@@ -187,6 +195,7 @@ main {
 .route-list {
   display: grid;
   gap: 10px;
+  padding-bottom: 4px;
 }
 
 .link-card,
