@@ -8,8 +8,8 @@
       name="description"
       content="LaLa arena TOKYO-BAYで開催される櫻坂46 四期生LIVE来場者向けの公式リンク集。会場、路線、駅、バス、空港、地図をまとめて確認できます。"
     >
-    <link rel="stylesheet" href="styles.css?v=20260603-3">
-    <script src="app.js?v=20260603-3" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20260603-4">
+    <script src="app.js?v=20260603-4" defer></script>
   </head>
   <body>
     <header class="hero">
@@ -40,7 +40,7 @@
         <button type="button" data-filter="map">地図</button>
       </nav>
 
-      <section class="link-section" data-section>
+      <section class="link-section" data-section data-section-filter="rail">
         <div class="section-title">
           <span>Rail</span>
           <h2>最寄り路線・駅</h2>
@@ -96,7 +96,7 @@
         </div>
       </section>
 
-      <section class="link-section" data-section>
+      <section class="link-section" data-section data-section-filter="official">
         <div class="section-title">
           <span>Official</span>
           <h2>公式・会場</h2>
@@ -145,10 +145,10 @@
         </div>
       </section>
 
-      <section class="link-section" data-section>
+      <section class="link-section" data-section data-section-filter="bus">
         <div class="section-title">
-          <span>Bus / Airport</span>
-          <h2>バス・空港</h2>
+          <span>Bus</span>
+          <h2>バス</h2>
         </div>
         <div class="link-grid">
           <a class="link-card" data-category="bus" href="https://mitsui-shopping-park.com/lalaport/tokyo-bay/access/access_03.html" target="_blank" rel="noreferrer">
@@ -167,6 +167,15 @@
             </span>
             <span class="arrow" aria-hidden="true">↗</span>
           </a>
+        </div>
+      </section>
+
+      <section class="link-section" data-section data-section-filter="airport">
+        <div class="section-title">
+          <span>Airport</span>
+          <h2>空港</h2>
+        </div>
+        <div class="link-grid">
           <a class="link-card" data-category="airport rail" href="https://www.narita-airport.jp/ja/access/train/?vm=r" target="_blank" rel="noreferrer">
             <span class="icon">NRT</span>
             <span class="link-copy">
@@ -202,7 +211,7 @@
         </div>
       </section>
 
-      <section class="link-section" data-section>
+      <section class="link-section" data-section data-section-filter="map">
         <div class="section-title">
           <span>Map</span>
           <h2>地図・ルート</h2>
