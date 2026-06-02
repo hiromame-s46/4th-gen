@@ -1,6 +1,7 @@
 const filterButtons = [...document.querySelectorAll('[data-filter]')];
 const cards = [...document.querySelectorAll('[data-category]')];
 const sections = [...document.querySelectorAll('[data-section]')];
+const sectionVisibility = new Map();
 let activeFilter = '';
 
 function setActiveTab(filter) {
@@ -34,21 +35,41 @@ function applyFilter(filter) {
 
 }
 
-const sectionObserver = new IntersectionObserver((entries) => {
-  const visibleEntry = entries
-    .filter((entry) => entry.isIntersecting && !entry.target.hidden)
-    .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+function syncActiveTabWithScroll() {
+  const visibleSection = sections
+    .filter((section) => !section.hidden)
+    .map((section) => ({
+      section,
+      ratio: sectionVisibility.get(section) || 0,
+      top: section.getBoundingClientRect().top,
+    }))
+    .filter((item) => item.ratio > 0)
+    .sort((a, b) => {
+      if (b.ratio !== a.ratio) {
+        return b.ratio - a.ratio;
+      }
 
-  const filter = visibleEntry?.target.dataset.sectionFilter;
+      return Math.abs(a.top) - Math.abs(b.top);
+    })[0];
+
+  const filter = visibleSection?.section.dataset.sectionFilter;
   if (!filter) {
     return;
   }
 
   setActiveTab(filter);
+}
+
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    sectionVisibility.set(entry.target, entry.isIntersecting ? entry.intersectionRatio : 0);
+  });
+
+  syncActiveTabWithScroll();
 }, {
   root: null,
-  rootMargin: '-38% 0px -46% 0px',
-  threshold: [0.35, 0.55],
+  rootMargin: '-24% 0px -42% 0px',
+  threshold: [0, 0.12, 0.25, 0.4, 0.6, 0.8],
 });
 
 sections.forEach((section) => {
