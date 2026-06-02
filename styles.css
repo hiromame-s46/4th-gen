@@ -45,7 +45,6 @@ button {
   max-width: 960px;
   margin: 0 auto;
   padding: 22px 18px 14px;
-  scroll-snap-align: start;
   scroll-margin-top: 0;
 }
 
@@ -143,7 +142,6 @@ main {
   background: rgba(245, 246, 248, 0.88);
   backdrop-filter: blur(16px);
   scrollbar-width: none;
-  scroll-snap-align: start;
   scroll-margin-top: 0;
 }
 
@@ -172,8 +170,6 @@ main {
 .link-section {
   margin: 0 0 26px;
   scroll-margin-top: 74px;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .section-title {
@@ -416,11 +412,7 @@ footer {
 
 @media (max-width: 760px) {
   html {
-    scroll-snap-type: y mandatory;
-  }
-
-  main {
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: none;
   }
 }
 
