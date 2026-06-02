@@ -2,15 +2,10 @@ const filterButtons = [...document.querySelectorAll('[data-filter]')];
 const cards = [...document.querySelectorAll('[data-category]')];
 const sections = [...document.querySelectorAll('[data-section]')];
 let currentFilter = 'all';
-let isProgrammaticScroll = false;
 let activeFilter = 'all';
 
-function visibleSections() {
-  return sections.filter((section) => !section.hidden);
-}
-
-function setActiveTab(filter, options = {}) {
-  if (activeFilter === filter && !options.force) {
+function setActiveTab(filter) {
+  if (activeFilter === filter) {
     return;
   }
 
@@ -21,34 +16,12 @@ function setActiveTab(filter, options = {}) {
     item.classList.toggle('is-active', isActive);
     item.setAttribute('aria-pressed', String(isActive));
   });
-
-  const activeButton = filterButtons.find((item) => item.dataset.filter === filter);
-  if (options.keepVisible !== false) {
-    activeButton?.scrollIntoView({ behavior: 'auto', inline: 'nearest', block: 'nearest' });
-  }
 }
 
-function scrollToSection(filter) {
-  const target = filter === 'all'
-    ? document.querySelector('[data-section]')
-    : visibleSections()[0];
-
-  if (!target) {
-    return;
-  }
-
-  requestAnimationFrame(() => {
-    isProgrammaticScroll = true;
-    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    window.setTimeout(() => {
-      isProgrammaticScroll = false;
-    }, 520);
-  });
-}
-
-function applyFilter(filter, shouldScroll = false) {
+function applyFilter(filter) {
   currentFilter = filter;
-  setActiveTab(filter, { force: true });
+  activeFilter = '';
+  setActiveTab(filter);
 
   cards.forEach((card) => {
     const categories = card.dataset.category.split(/\s+/);
@@ -61,16 +34,9 @@ function applyFilter(filter, shouldScroll = false) {
     section.toggleAttribute('hidden', !hasVisibleCard);
   });
 
-  if (shouldScroll) {
-    scrollToSection(filter);
-  }
 }
 
 const sectionObserver = new IntersectionObserver((entries) => {
-  if (isProgrammaticScroll) {
-    return;
-  }
-
   const visibleEntry = entries
     .filter((entry) => entry.isIntersecting && !entry.target.hidden)
     .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
@@ -93,7 +59,7 @@ sections.forEach((section) => {
 
 filterButtons.forEach((button) => {
   button.addEventListener('click', () => {
-    applyFilter(button.dataset.filter, true);
+    applyFilter(button.dataset.filter);
   });
 });
 

@@ -19,8 +19,6 @@
 
 html {
   background: var(--bg);
-  scroll-behavior: smooth;
-  scroll-padding-top: 74px;
 }
 
 body {
@@ -45,7 +43,6 @@ button {
   max-width: 960px;
   margin: 0 auto;
   padding: 22px 18px 14px;
-  scroll-margin-top: 0;
 }
 
 .hero__label,
@@ -142,7 +139,6 @@ main {
   background: rgba(245, 246, 248, 0.88);
   backdrop-filter: blur(16px);
   scrollbar-width: none;
-  scroll-margin-top: 0;
 }
 
 .category-tabs::-webkit-scrollbar {
@@ -171,7 +167,6 @@ main {
   margin: 0 0 18px;
   padding: 0 0 30px;
   border-bottom: 1px solid rgba(105, 112, 125, 0.16);
-  scroll-margin-top: 74px;
 }
 
 .link-section:last-of-type {
@@ -419,18 +414,10 @@ footer {
   }
 }
 
-@media (max-width: 760px) {
-  html {
-    scroll-snap-type: none;
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
-    scroll-snap-type: none !important;
     transition-duration: 0.01ms !important;
   }
 }
