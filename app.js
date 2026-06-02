@@ -1,8 +1,7 @@
 const filterButtons = [...document.querySelectorAll('[data-filter]')];
 const cards = [...document.querySelectorAll('[data-category]')];
 const sections = [...document.querySelectorAll('[data-section]')];
-let currentFilter = 'all';
-let activeFilter = 'all';
+let activeFilter = '';
 
 function setActiveTab(filter) {
   if (activeFilter === filter) {
@@ -19,7 +18,6 @@ function setActiveTab(filter) {
 }
 
 function applyFilter(filter) {
-  currentFilter = filter;
   activeFilter = '';
   setActiveTab(filter);
 
@@ -42,7 +40,7 @@ const sectionObserver = new IntersectionObserver((entries) => {
     .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
 
   const filter = visibleEntry?.target.dataset.sectionFilter;
-  if (!filter || currentFilter !== 'all') {
+  if (!filter) {
     return;
   }
 
@@ -63,4 +61,4 @@ filterButtons.forEach((button) => {
   });
 });
 
-applyFilter('all');
+setActiveTab('rail');
