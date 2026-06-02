@@ -47,7 +47,7 @@ button {
 
 .hero__label,
 .section-title span,
-.notice span {
+.notice > span {
   color: var(--accent);
   font-size: 12px;
   font-weight: 800;
@@ -121,6 +121,8 @@ main {
 }
 
 .notice p {
+  display: grid;
+  gap: 4px;
   margin: 0;
   font-size: 14px;
   line-height: 1.55;
